@@ -1,0 +1,9 @@
+\.bak$
+\.bck$
+\.raw$
+\.dcm$
+\.log$
+\.kicad_pcb-bak$
+autosave
+cache
+\.net$
