@@ -1,0 +1,36 @@
+SIMM interfacing design
+-----------------------
+
++-----+--------+--------+
+|addr |        | RAS0/2 |
+|pins | RAS0/2 | RAS1/3 |
++-----+--------+--------+
+| 10  | 4mb    | 8mb    | (20 addr total)
+| 11  | 16mb   | 32mb   | (22 addr total)
+| 12  | 64mb   | 128mb  | (24 addr total)
++-----+--------+--------+
+
+8mb, 32mb, kai 128mb exoun RAS0/2 kai RAS1/3
+
+Address lines	SIMM pins	notes
+-------------------------------------------
+A0-A9,A10-A19	SA0-SA9		all
+
+4mb,8mb
+A20		RAS0/2		all
+A21		RAS1/3		8mb
+
+16mb,32mb
+A20,A21		SA10
+A22		RAS0/2
+A23		RAS1/3		32mb
+
+64mb,128mb
+A20,A21		SA10
+A22,A23		SA11
+A24		RAS0/2
+A25		RAS1/3		128mb
+--------------------------------------------
+
+line switching:
+A20 -> RAS0/2 if size 

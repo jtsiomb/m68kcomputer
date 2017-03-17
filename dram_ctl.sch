@@ -30,7 +30,6 @@ LIBS:contrib
 LIBS:valves
 LIBS:switches
 LIBS:m68kcomp1
-LIBS:m68kcomp1-cache
 EELAYER 25 0
 EELAYER END
 $Descr User 12205 9370

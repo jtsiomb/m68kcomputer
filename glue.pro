@@ -1,6 +1,10 @@
-update=Thu 16 Mar 2017 11:12:44 PM EET
+update=Thu 16 Mar 2017 01:21:54 AM EET
 version=1
-last_client=kicad
+last_client=eeschema
+[general]
+version=1
+RootSch=
+BoardNm=
 [pcbnew]
 version=1
 LastNetListRead=
@@ -23,8 +27,6 @@ ModuleOutlineThickness=0.150000000000
 [cvpcb]
 version=1
 NetIExt=net
-[general]
-version=1
 [eeschema]
 version=1
 LibDir=
@@ -58,8 +60,6 @@ LibName26=opto
 LibName27=atmel
 LibName28=contrib
 LibName29=valves
-LibName30=switches
-LibName31=m68kcomp1
 [schematic_editor]
 version=1
 PageLayoutDescrFile=
