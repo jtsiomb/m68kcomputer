@@ -41,8 +41,8 @@ Date "2017-03-16"
 Rev "1"
 Comp ""
 Comment1 ""
-Comment2 ""
-Comment3 ""
+Comment2 "License: Creative Commons Attribution Share-Alike (CC BY-SA)."
+Comment3 "Copyright © 2017 John Tsiombikas <nuclear@member.fsf.org>"
 Comment4 ""
 $EndDescr
 $Comp
