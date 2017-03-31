@@ -1,4 +1,4 @@
-update=Mon 27 Mar 2017 05:16:37 AM EEST
+update=Tue 28 Mar 2017 01:52:23 PM EEST
 version=1
 last_client=eeschema
 [general]
@@ -62,3 +62,13 @@ LibName28=contrib
 LibName29=valves
 LibName30=m68kcomp1
 LibName31=maxim
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
