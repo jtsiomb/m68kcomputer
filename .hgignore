@@ -12,3 +12,9 @@ cache
 \.net$
 ^hw/gerbers/
 ^hw/print/
+\.eep$
+\.hex$
+\.map$
+\.rom$
+\.bin$
+^tools/byteweave

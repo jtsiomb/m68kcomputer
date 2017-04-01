@@ -1,0 +1,46 @@
+OUTPUT_ARCH(m68k)
+
+MEMORY
+{
+	/* 16k ROM starting from 0 */
+	rom : ORIGIN = 0x00000000, LENGTH = 0x00004000
+	/* 256k RAM starting from 256k */
+	ram : ORIGIN = 0x00040000, LENGTH = 0x00040000
+}
+
+PROVIDE (_stacktop = 0x00080000);
+
+SECTIONS {
+	/* ---- start of ROM ---- */
+	/* .vect section is used to place the m68k exception vectors at the
+	 * beginning of the address space
+	 */
+	.vect : { * (.vect); } >rom
+	.text : { * (.text); } >rom
+	.rodata : { * (.rodata); } >rom
+
+	/* place the load address of the .data section after .rodata */
+	. = ALIGN(4);
+	_data_lma = .;
+	_rom_end = _data_lma + _data_size;
+
+	/* ---- start of RAM ---- */
+	. = 0x40000;
+	/* place the .data section at the start of RAM */
+	.data ALIGN(4): AT (_data_lma) {
+		_data_start = .;
+		* (.data);
+		. = ALIGN(4);
+		_data_end = .;
+	} >ram
+	_data_size = SIZEOF(.data);
+
+	/* place the .bss section at the end */
+	.bss ALIGN(4): {
+		_bss_start = .;
+		* (.bss);
+		. = ALIGN(4);
+		_bss_end = .;
+	} >ram
+	_bss_size = SIZEOF(.bss);
+}
