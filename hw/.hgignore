@@ -1,6 +1,3 @@
-\.o$
-\.d$
-\.swp$
 \.bak$
 \.bck$
 \.raw$
@@ -10,5 +7,5 @@
 autosave
 cache
 \.net$
-^hw/gerbers/
-^hw/print/
+^gerbers/
+^print/
