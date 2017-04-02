@@ -1,12 +1,29 @@
 | vi:ft=gas68k:
 	.text
 	.global start
-start:	move.b #0, %d0
-top:	move.b %d0, 0x8000
-	addi.b #1, %d0
+start:
+	jsr enable_intr
+	move.l #msg, %a0
+	jsr printstr
+mainloop:
+	bra.s mainloop
+	
+| printstr expects pointer to zero-terminated string in a0
+printstr:
+	move.b (%a0)+, %d0
+	tst.b %d0
+	beq.s 0f
+	move.b %d0, 0x8000
+	bra.s printstr
+0:	rts
 
-|	move.l #0x80000, %d1
-|delay1: subi.l #1, %d1
-|	bne.s delay1
+	.global intr_uart
+intr_uart:
+	| just echo back
+	move.l %d0, -(%sp)
+	move.w 0x8000, %d0
+	move.w %d0, 0x8000
+	move.l (%sp)+, %d0
+	rte	
 
-	bra.s top
+msg:	.asciz "Hello world from the 68k\n"

@@ -30,5 +30,13 @@
 #define PD_DTACK_BIT		0x10
 #define PD_RTC_CE_BIT		0x20
 
+/* processor interface commands */
+enum {
+	CMD_INVALID,
+	CMD_TIME,
+	CMD_DATE,
+	CMD_TIMER
+};
+
 
 #endif	/* CONFIG_H_ */

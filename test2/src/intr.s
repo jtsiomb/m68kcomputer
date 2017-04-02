@@ -88,6 +88,17 @@ intr_fatal:
 intr_slot1:
 intr_slot2:
 intr_timer:
-intr_uart:
-	stop #0x2700
-	rte
+	move.l #fatal_msg, %a0
+0:	move.b (%a0)+, %d0
+	tst.b %d0
+	beq.s 0f
+	move.b %d0, 0x8000	| 0x8000 is the address of the UART
+	bra.s 0b
+0:	stop #0x2700
+	| sanity check
+	move.l #dot, %a0
+	move.b (%a0), 0x8000
+	bra.s 0b
+
+fatal_msg: .asciz "Unexpected interrupt, system halted!\n"
+dot: .ascii "."

@@ -16,7 +16,7 @@
 static int uart_send_char(char c, FILE *fp);
 static int uart_get_char(FILE *fp);
 
-#define BUF_SZ	64
+#define BUF_SZ	8
 #define BUF_IDX_MASK	0x3f
 #define NEXT_IDX(x)	(((x) + 1) & BUF_IDX_MASK)
 static char outbuf[BUF_SZ];
@@ -55,10 +55,14 @@ static int uart_send_char(char c, FILE *fp)
 {
 	int next;
 
+	/* TODO: remove translation */
 	if(c == '\n') {
 		uart_send_char('\r', fp);
 	}
 
+	while((UCSR0A & (1 << UDRE0)) == 0);
+	UDR0 = (unsigned char)c;
+#if 0
 	next = NEXT_IDX(out_wr);
 	while(next == out_rd);
 
@@ -67,6 +71,7 @@ static int uart_send_char(char c, FILE *fp)
 
 	/* enable the Tx data register empty interrupt */
 	UCSR0B |= 1 << UDRIE0;
+#endif
 	return 0;
 }
 
@@ -81,16 +86,21 @@ static int uart_get_char(FILE *fp)
 	return c;
 }
 
+extern void recv_data_intr(void);
+
 ISR(USART_RX_vect)
 {
 	char c = UDR0;
 
+	/* TODO: remove translation */
 	if(c == '\r') {
 		c = '\n';
 	}
 
 	inbuf[in_wr] = c;
 	in_wr = NEXT_IDX(in_wr);
+
+	recv_data_intr();
 }
 
 /* USART Tx data register empty (can send more data) */

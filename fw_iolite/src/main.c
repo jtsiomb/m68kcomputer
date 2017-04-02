@@ -18,13 +18,21 @@ enum {
 };
 
 void init(void);
+void do_read(unsigned char addr);
+void do_write(unsigned char addr);
+void pulse_dtack(void);
+unsigned char rdata(void);
 const char *day_of_week(int x);
+
+unsigned char last_cmd;
+unsigned char rtc_seq_idx = 0;
+
+struct rtc_time tm;
+struct rtc_date date;
+
 
 int main(void)
 {
-	struct rtc_time tm;
-	struct rtc_date date;
-
 	init();
 
 	rtc_get_time(&tm);
@@ -38,19 +46,10 @@ int main(void)
 		if((PIND & PD_ENABLE_BIT) == 0) {
 			int addr = PINB & 3;
 			if(PIND & PD_RDWR_BIT) {
-				printf("got read request for address %d\n", addr);
-				PIND &= ~PD_DTACK_BIT;
-				for(;;);
+				do_read(addr);
 			} else {
-				unsigned char data = (PINC & PC_DATA_MASK) | (PIND & PD_DATA_MASK);
-				printf("got write for address %d: %d\n", addr, data);
+				do_write(addr);
 			}
-			_delay_ms(100);
-			PORTD |= PD_DTACK_BIT;
-			asm volatile ("nop\n\r");
-			PORTD &= ~PD_DTACK_BIT;
-
-			while((PIND & PD_ENABLE_BIT) == 0);
 		}
 	}
 	return 0;
@@ -72,6 +71,130 @@ void init(void)
 	sei();
 
 	rtc_init();
+}
+
+void do_read(unsigned char addr)
+{
+	unsigned char data;
+
+	switch(addr) {
+	case 0: /* UART */
+		data = getchar();
+		/*printf("DBG: read(%x)->'%c'\n", (unsigned int)addr, data);*/
+		/* also acknowledge the interrupt if it's pending and
+		 * there are no more bytes to read
+		 */
+		cli();
+		if(!have_input()) {
+			PORTB |= PB_IRQ_UART_BIT;
+		}
+		sei();
+		break;
+
+	case 2:
+		data = rdata();
+		break;
+
+	default:
+		data = 0xff;
+	}
+
+	/* drive data bus */
+	DDRC = PC_DATA_MASK;
+	DDRD |= PD_DATA_MASK;
+
+	/* write the data to the data bus */
+	PORTC = data;
+	PORTD = (PORTD & ~PD_DATA_MASK) | (data & PD_DATA_MASK);
+
+	pulse_dtack();
+	while((PIND & PD_ENABLE_BIT) == 0);
+
+	/* read done, tri-state data bus */
+	DDRC = 0;
+	DDRD &= ~PD_DATA_MASK;
+}
+
+void do_write(unsigned char addr)
+{
+	/* read the value off the data bus */
+	unsigned char data = (PINC & PC_DATA_MASK) | (PIND & PD_DATA_MASK);
+
+	switch(addr) {
+	case 0:	/* UART */
+		putchar(data);
+		fflush(stdout);
+		/*printf("DBG: write(%x)->'%c' (%x)\n", (unsigned int)addr, data, (unsigned int)data);*/
+		break;
+
+	case 1: /* cmd */
+		last_cmd = data;
+		switch(data) {
+		case CMD_TIME:
+			rtc_get_time(&tm);
+			rtc_seq_idx = 0;
+			break;
+		case CMD_DATE:
+			rtc_get_date(&date);
+			rtc_seq_idx = 0;
+			break;
+		default:
+			break;
+		}
+		break;
+
+	case 2: /* data */
+		break;
+
+	case 3:	/* interrupt acknowledge */
+		switch(data) {
+		case 2:
+			PORTB |= PB_IRQ_UART_BIT;
+			break;
+		case 7:
+			PORTB |= PB_IRQ_TIMER_BIT;
+			break;
+		default:
+			break;
+		}
+		break;
+	}
+
+	pulse_dtack();
+	while((PIND & PD_ENABLE_BIT) == 0);
+}
+
+void pulse_dtack(void)
+{
+	PORTD |= PD_DTACK_BIT;
+	asm volatile ("nop\n\t");
+	PORTD &= ~PD_DTACK_BIT;
+}
+
+/* processor is reading from the data register */
+unsigned char rdata(void)
+{
+	switch(last_cmd) {
+	case CMD_TIME:
+		return ((int*)&tm)[rtc_seq_idx++];
+
+	case CMD_DATE:
+		return ((int*)&date)[rtc_seq_idx++];
+
+	case CMD_INVALID:
+	default:
+		break;
+	}
+	return 0xff;
+}
+
+/* this is called by the UART interrupt to signal that we got some data
+ * and we should interrupt the processor
+ */
+void recv_data_intr(void)
+{
+	/* raise a 68k interrupt */
+	PORTB &= ~PB_IRQ_UART_BIT;
 }
 
 const char *day_of_week(int x)
