@@ -30,7 +30,6 @@ LIBS:contrib
 LIBS:valves
 LIBS:m68kcomp1
 LIBS:maxim
-LIBS:iolite-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
@@ -477,22 +476,6 @@ F 3 "" H 5000 3800 50  0000 C CNN
 	1    5000 3800
 	1    0    0    -1  
 $EndComp
-Text Label 3650 4050 0    60   ~ 0
-BUS0
-Text Label 3650 4150 0    60   ~ 0
-BUS1
-Text Label 3650 4250 0    60   ~ 0
-BUS2
-Text Label 3650 4350 0    60   ~ 0
-BUS3
-Text Label 3650 4450 0    60   ~ 0
-BUS4
-Text Label 3650 4550 0    60   ~ 0
-BUS5
-Text Label 3650 4650 0    60   ~ 0
-BUS6
-Text Label 3650 4750 0    60   ~ 0
-BUS7
 Text Label 3050 4050 0    60   ~ 0
 D0
 Text Label 3050 4150 0    60   ~ 0
@@ -1367,7 +1350,11 @@ Wire Wire Line
 Wire Wire Line
 	6800 4200 7050 4200
 Wire Wire Line
-	6800 3300 7750 3300
+	6800 3300 7200 3300
+Wire Wire Line
+	7200 3300 7400 3300
+Wire Wire Line
+	7400 3300 7750 3300
 Wire Wire Line
 	6300 3100 6000 3100
 Wire Wire Line
@@ -1391,7 +1378,11 @@ Wire Wire Line
 Wire Wire Line
 	6050 4300 6050 4550
 Wire Wire Line
-	6050 4550 7050 4550
+	6050 4550 6550 4550
+Wire Wire Line
+	6550 4550 6850 4550
+Wire Wire Line
+	6850 4550 7050 4550
 Wire Wire Line
 	7050 4550 7050 4300
 Connection ~ 6550 4550
@@ -1414,18 +1405,26 @@ Wire Wire Line
 Wire Wire Line
 	1800 5550 1800 5050
 Wire Wire Line
-	1550 5050 2900 5050
+	1550 5050 1800 5050
+Wire Wire Line
+	1800 5050 2900 5050
 Connection ~ 2900 5050
 Wire Wire Line
-	1550 6150 1800 6150
+	1550 6150 1700 6150
+Wire Wire Line
+	1700 6150 1800 6150
 Connection ~ 1700 6150
 Wire Wire Line
 	1550 5050 1550 5850
 Connection ~ 1800 5050
 Wire Wire Line
-	850  4800 1150 4800
+	850  4800 1000 4800
 Wire Wire Line
-	850  5100 1150 5100
+	1000 4800 1150 4800
+Wire Wire Line
+	850  5100 1000 5100
+Wire Wire Line
+	1000 5100 1150 5100
 Connection ~ 1000 5100
 Connection ~ 1000 4800
 Wire Wire Line
@@ -1435,21 +1434,21 @@ Wire Wire Line
 Wire Wire Line
 	3350 4750 3050 4750
 Wire Wire Line
-	3650 4050 3850 4050
+	3650 4050 3900 4050
 Wire Wire Line
-	3650 4150 3850 4150
+	3650 4150 3900 4150
 Wire Wire Line
-	3650 4250 3850 4250
+	3650 4250 3900 4250
 Wire Wire Line
-	3650 4350 3850 4350
+	3650 4350 3900 4350
 Wire Wire Line
-	3650 4450 3850 4450
+	3650 4450 3900 4450
 Wire Wire Line
-	3650 4550 3850 4550
+	3650 4550 3900 4550
 Wire Wire Line
-	3650 4650 3850 4650
+	3650 4650 3900 4650
 Wire Wire Line
-	3650 4750 3850 4750
+	3650 4750 3900 4750
 Wire Wire Line
 	9400 3950 9700 3950
 Wire Wire Line
@@ -1469,17 +1468,23 @@ Wire Wire Line
 Wire Wire Line
 	2500 3700 2700 3700
 Wire Wire Line
-	2500 2400 3350 2400
+	2500 2400 3200 2400
+Wire Wire Line
+	3200 2400 3350 2400
 Wire Wire Line
 	3200 2400 3200 2450
 Wire Wire Line
-	2950 2800 3350 2800
+	2950 2800 3200 2800
+Wire Wire Line
+	3200 2800 3350 2800
 Wire Wire Line
 	3200 2800 3200 2750
 Connection ~ 3200 2400
 Connection ~ 3200 2800
 Wire Wire Line
-	3750 2400 3750 2850
+	3750 2400 3750 2800
+Wire Wire Line
+	3750 2800 3750 2850
 Wire Wire Line
 	3850 1700 3850 3300
 Wire Wire Line
@@ -1669,7 +1674,27 @@ Wire Wire Line
 Wire Wire Line
 	10100 2150 9800 2150
 Wire Bus Line
-	2950 3250 2950 4700
+	2950 3250 2950 3950
+Wire Bus Line
+	2950 3950 2950 4050
+Wire Bus Line
+	2950 4050 2950 4100
+Wire Bus Line
+	2950 4100 2950 4150
+Wire Bus Line
+	2950 4150 2950 4200
+Wire Bus Line
+	2950 4200 2950 4250
+Wire Bus Line
+	2950 4250 2950 4350
+Wire Bus Line
+	2950 4350 2950 4450
+Wire Bus Line
+	2950 4450 2950 4550
+Wire Bus Line
+	2950 4550 2950 4650
+Wire Bus Line
+	2950 4650 2950 4700
 Wire Wire Line
 	10050 3600 9850 3600
 Wire Wire Line
@@ -1735,9 +1760,13 @@ Wire Wire Line
 Wire Wire Line
 	10750 5100 10550 5100
 Wire Wire Line
-	6900 5800 7500 5800
+	6900 5800 7200 5800
 Wire Wire Line
-	6900 6100 7500 6100
+	7200 5800 7500 5800
+Wire Wire Line
+	6900 6100 7200 6100
+Wire Wire Line
+	7200 6100 7500 6100
 Wire Wire Line
 	2500 3800 4550 3800
 Wire Wire Line
@@ -1763,7 +1792,9 @@ Wire Wire Line
 Connection ~ 7200 3300
 Connection ~ 7400 3300
 Wire Wire Line
-	5200 6500 5200 7200
+	5200 6500 5200 6850
+Wire Wire Line
+	5200 6850 5200 7200
 Connection ~ 5200 7200
 Wire Wire Line
 	1900 6850 1350 6850
@@ -1846,11 +1877,15 @@ Wire Wire Line
 Wire Wire Line
 	2950 2500 2500 2500
 Wire Wire Line
-	2500 2300 4400 2300
+	2500 2300 3750 2300
+Wire Wire Line
+	3750 2300 4400 2300
 Wire Wire Line
 	4400 2500 3900 2500
 Wire Wire Line
-	3900 2500 3900 3900
+	3900 2500 3900 3200
+Wire Wire Line
+	3900 3200 3900 3900
 Wire Wire Line
 	3900 3900 2500 3900
 Wire Wire Line
@@ -1862,12 +1897,16 @@ Wire Wire Line
 Wire Wire Line
 	4400 1750 4400 2200
 Wire Wire Line
-	4400 2200 2500 2200
+	4400 2200 3650 2200
+Wire Wire Line
+	3650 2200 2500 2200
 Wire Wire Line
 	4150 3200 3900 3200
 Connection ~ 3900 3200
 Wire Wire Line
-	4450 3200 5700 3200
+	4450 3200 5000 3200
+Wire Wire Line
+	5000 3200 5700 3200
 Connection ~ 5000 3200
 Text Label 2500 2200 0    60   ~ 0
 MISO
@@ -1947,7 +1986,31 @@ Entry Wire Line
 Entry Wire Line
 	2850 4100 2950 4200
 Wire Bus Line
-	2850 2750 2850 3250
+	2850 2750 2850 2850
+Wire Bus Line
+	2850 2850 2850 2950
+Wire Bus Line
+	2850 2950 2850 3050
+Wire Bus Line
+	2850 3050 2850 3150
+Wire Bus Line
+	2850 3150 2850 3250
 Wire Bus Line
 	2850 3250 2950 3250
+Text Label 3650 4050 0    60   ~ 0
+BUS8
+Text Label 3650 4150 0    60   ~ 0
+BUS9
+Text Label 3650 4250 0    60   ~ 0
+BUS10
+Text Label 3650 4350 0    60   ~ 0
+BUS11
+Text Label 3650 4450 0    60   ~ 0
+BUS12
+Text Label 3650 4550 0    60   ~ 0
+BUS13
+Text Label 3650 4650 0    60   ~ 0
+BUS14
+Text Label 3650 4750 0    60   ~ 0
+BUS15
 $EndSCHEMATC
