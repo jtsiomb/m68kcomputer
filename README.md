@@ -1,6 +1,8 @@
 Homebrew 68k computer project 1
 ===============================
 
+![photo](http://nuclear.mutantstargoat.com/hw/m68kcomp1/img/m68kcomp1_test2-thumb.jpg)
+
 About
 -----
 The purpose of this project is to design a minimal but useful homebrew computer,
