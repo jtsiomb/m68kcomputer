@@ -1,29 +1,29 @@
 | vi:ft=gas68k:
+	.include "defs.inc"
 	.text
 	.global start
 start:
+	| copy .data section from ROM to RAM
+	move.l #_data_lma, %a0
+	move.l #_data_start, %a1
+	move.l #_data_end, %a2
+	cmp.l %a1, %a2
+	beq.s 1f	| skip data copy if the section is empty
+0:	move.l (%a0)+, (%a1)+
+	cmp.l %a1, %a2
+	bne.s 0b
+1:
+	| zero the .bss section
+	move.l #_bss_start, %a0
+	move.l #_bss_end, %a1
+	cmp.l %a0, %a1
+	beq.s 1f	| skip bss clearing if the section is empty
+0:	clr.l (%a0)+
+	cmp.l %a0, %a1
+	bne.s 0b
+1:
 	jsr enable_intr
-	move.l #msg, %a0
-	jsr printstr
-mainloop:
-	bra.s mainloop
-	
-| printstr expects pointer to zero-terminated string in a0
-printstr:
-	move.b (%a0)+, %d0
-	tst.b %d0
-	beq.s 0f
-	move.b %d0, 0x8001
-	bra.s printstr
-0:	rts
-
-	.global intr_uart
-intr_uart:
-	| just echo back
-	move.l %d0, -(%sp)
-	move.b 0x8001, %d0
-	move.b %d0, 0x8001
-	move.l (%sp)+, %d0
-	rte	
-
-msg:	.asciz "Hello world from the 68k\n"
+	jsr main
+endloop:
+	stop #0x2700
+	bra.s endloop

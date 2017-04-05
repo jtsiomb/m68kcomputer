@@ -53,12 +53,7 @@ int have_input(void)
 
 static int uart_send_char(char c, FILE *fp)
 {
-	int next;
-
-	/* TODO: remove translation */
-	if(c == '\n') {
-		uart_send_char('\r', fp);
-	}
+	/*int next;*/
 
 	while((UCSR0A & (1 << UDRE0)) == 0);
 	UDR0 = (unsigned char)c;
@@ -91,11 +86,6 @@ extern void recv_data_intr(void);
 ISR(USART_RX_vect)
 {
 	char c = UDR0;
-
-	/* TODO: remove translation */
-	if(c == '\r') {
-		c = '\n';
-	}
 
 	inbuf[in_wr] = c;
 	in_wr = NEXT_IDX(in_wr);

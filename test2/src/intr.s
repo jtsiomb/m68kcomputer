@@ -1,4 +1,5 @@
 | vi:ft=gas68k:
+	.include "defs.inc"
 | the following will go into the .vect section which will be placed at the very
 | begining of the binary at address 0 by the linker (see lnkscript).
 	.section .vect,"a"
@@ -83,6 +84,16 @@ disable_intr:
 	ori.w #0x0300, %sr
 	rts
 
+.global set_intr_level
+set_intr_level:
+	move.w 4(%sp), %d0
+	lsl.w #8, %d0
+	move.w %sr, %d1
+	andi.w #0xf8ff, %d1
+	or.w %d0, %d1
+	move.w %d1, %sr
+	rts
+
 | interrupt handlers
 intr_fatal:
 intr_slot1:
@@ -92,13 +103,13 @@ intr_timer:
 0:	move.b (%a0)+, %d0
 	tst.b %d0
 	beq.s 0f
-	move.b %d0, 0x8000	| 0x8000 is the address of the UART
+	move.b %d0, IOADDR_UART
 	bra.s 0b
 0:	stop #0x2700
 	| sanity check
 	move.l #dot, %a0
-	move.b (%a0), 0x8000
+	move.b (%a0), IOADDR_UART
 	bra.s 0b
 
-fatal_msg: .asciz "Unexpected interrupt, system halted!\n"
+fatal_msg: .asciz "Unexpected interrupt, system halted!\r\n"
 dot: .ascii "."

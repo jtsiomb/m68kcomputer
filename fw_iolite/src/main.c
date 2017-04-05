@@ -38,8 +38,8 @@ int main(void)
 	rtc_get_time(&tm);
 	rtc_get_date(&date);
 
-	printf("\nI/O board lite debug\n");
-	printf("%s %02d/%02d/%d - %02d:%02d.%02ds\n", day_of_week(date.dow), date.day,
+	printf("\r\nI/O board lite debug\r\n");
+	printf("%s %02d/%02d/%d - %02d:%02d.%02ds\r\n", day_of_week(date.dow), date.day,
 			date.month, date.year, tm.hour, tm.min, tm.sec);
 
 	for(;;) {

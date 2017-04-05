@@ -13,7 +13,7 @@ LD = $(tool_prefix)ld
 OBJCOPY = $(tool_prefix)objcopy
 OBJDUMP = $(tool_prefix)objdump
 
-ASFLAGS = -m68010
+ASFLAGS = -m68010 -Isrc
 LDFLAGS = -T m68kcomp1.ldscript
 
 .PHONY: rom
