@@ -26,12 +26,13 @@ mainloop:
 | proc_input expects input character in d0
 proc_input:
 	cmpi.b #10, %d0		| if newline, goto runcmd
+	move.b #0, cmdbuf_idx
 	beq.s .Lruncmd
 	move.b cmdbuf_idx, %d1
 	cmpi.b #CMDBUF_SZ, %d1	| if overflow, return
 	bne.s 0f
 	rts
-0:	lea cmdbuf, %a0
+0:	movea.l cmdbuf, %a0
 	move.b %d0, (%a0,%d1)	| append character
 	addi.b #1, %d1
 	move.b %d1, cmdbuf_idx
@@ -40,60 +41,106 @@ proc_input:
 .Lruncmd:
 	move.b cmdbuf, %d0
 	cmpi.b #LAST_BRA, %d0
-	bhi.s .Linvalid
+	bhi cmd_invalid
 	| calculate offset in the branch table
 	subi.b #FIRST_BRA, %d0
-	bcs.s .Linvalid
+	bcs cmd_invalid
 	lsl.b #1, %d0
 	jmp .Lbratab(%pc, %d0.w)
 	
 .Lbratab:
-	.equ FIRST_BRA, 97	| 'a'
-	.equ LAST_BRA, 120	| 'x'
-	bra.s .Laddr	| 'a' - address
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Lecho	| 'e' - echo
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Lhelp	| 'h' - help
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Lread	| 'r' - read
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Linvalid
-	bra.s .Lwrite	| 'w' - write
-	bra.s .Lexec	| 'x' - execute
+	.equ FIRST_BRA, 'a'
+	.equ LAST_BRA, 'x'
+	bra cmd_addr	| 'a' - address
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_echo	| 'e' - echo
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_help	| 'h' - help
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_read	| 'r' - read
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_invalid
+	bra cmd_write	| 'w' - write
+	bra cmd_exec	| 'x' - execute
 	nop
 
-.Laddr:
-	lea cmdbuf + 1, %a0
-.Lecho:
-.Lread:
-.Lwrite:
-.Lexec:
-.Lhelp:
+cmd_addr: | set address command handler
+	movea.l cmdbuf, %a0
+	addq.l #1, %a0	| skip the command char (should be 'a')
+	jsr parse_word
+	cmp.l #0, %d0
+	bge.s 0f
+	movea.l str_invval, %a0
+	jsr printstr
+	rts
+0:	move.l %d0, cur_addr
+	rts
+
+cmd_echo: | set echo on/off command handler
+	movea.l cmdbuf, %a0
+	addq.l #1, %a0	| skip the command char (should be 'e')
+	move.w #0, %d0
+	cmpi.b #'0', (%a0)
+	beq.s 0f
+	move.w #1, %d0
+0:	move.w %d0, echo 
+	rts
+
+cmd_read: | read word command handler
+	movea.l cmdbuf, %a0
+	addq.l #1, %a0	| skip the command char (should be 'r')
+	movea.l cur_addr, %a1
+	move.w (%a1)+, %d0
+	move.l %a1, cur_addr
+	jsr print_word
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
+	rts
+
+cmd_write: | write word command handler
+	movea.l cmdbuf, %a0
+	addq.l #1, %a0	| skip the command char (should be 'w')
+	jsr parse_word
+	cmp.l #0, %d0
+	bge.s 0f
+	movea.l str_invval, %a0
+	jsr printstr
+	rts
+0:	movea.l cur_addr, %a1
+	move.l %d0, (%a1)+
+	move.l %a1, cur_addr
+	rts
+
+cmd_exec: | execute code from current address command handler
+	movea.l cur_addr, %a0
+	jsr (%a0)
+	rts
+
+cmd_help: | help command handler
 	movea.l #str_help, %a0
 	jsr printstr
 	rts
-.Linvalid:
+
+cmd_invalid:
 	movea.l #str_unkcmd, %a0
 	jsr printstr
-	move.l %d0, IOADDR_UART
-	move.l #13, IOADDR_UART
-	move.l #10, IOADDR_UART
+	move.b %d0, IOADDR_UART
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
 	rts
-	
 
 | UART interrupt handler echoes the character and appends it to the
 | input buffer for further processing in the main loop
@@ -101,7 +148,10 @@ proc_input:
 intr_uart:
 	movem.l %d0-%d2/%a0, -(%sp)
 	move.b IOADDR_UART, %d0
+	cmpi.w #0, echo
+	beq.s .Lskipecho
 	move.b %d0, IOADDR_UART | echo
+.Lskipecho:
 	lea inbuf, %a0
 	move.b inbuf_wr, %d1	| index -> d1
 	move.b %d0, (%a0,%d1)	| *(inbuf + index) = d0
@@ -127,6 +177,7 @@ str_help:
 	.asciz "w<data> - write word and increment address\r\n"
 	.asciz "e<0|1> - echo on/off\r\n"
 	.asciz "h - print command help\r\n"
+str_invval: .asciz "Invalid hex value\r\n"
 
 	.bss
 | input buffer
@@ -138,3 +189,5 @@ inbuf_rd: .byte
 	.equ CMDBUF_SZ, 64
 cmdbuf: .space CMDBUF_SZ
 cmdbuf_idx: .byte
+cur_addr: .long
+echo:	.word
