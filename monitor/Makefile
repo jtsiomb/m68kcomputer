@@ -1,7 +1,7 @@
 src = $(wildcard src/*.s)
 obj = $(src:.s=.o)
 
-name = test
+name = monitor
 elf = $(name).elf
 bin = $(name).bin
 
