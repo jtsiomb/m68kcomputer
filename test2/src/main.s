@@ -8,89 +8,113 @@ main:
 	jsr printstr
 
 mainloop:
-	move.b inbuf_rd, %d1
-	cmp.b inbuf_wr, %d1
-	beq.s .Linbuf_empty	| skip if the input queue is empty
-	lea inbuf, %a0
 	DISABLE_INTR
-	move.b inbuf_rd, %d1	| re-read again in the critical section
-	move.b (%a0,%d1), %d0
-	addi.b #1, %d1
-	andi.b #INBUF_MASK, %d1
-	move.b %d1, inbuf_rd
+	move.w inbuf_rd, %d1
+	cmp.w inbuf_wr, %d1
+	bne.s .Lhaveinput
+	ENABLE_INTR
+	bra.s mainloop
+.Lhaveinput:
+	movea.l #inbuf, %a0
+	move.b (%a0,%d1.w), %d0
+	addi.w #1, %d1
+	andi.w #INBUF_MASK, %d1
+	move.w %d1, inbuf_rd
 	ENABLE_INTR
 	jsr proc_input
-.Linbuf_empty:
 	bra.s mainloop
 
 | proc_input expects input character in d0
 proc_input:
-	cmpi.b #10, %d0		| if newline, goto runcmd
-	move.b #0, cmdbuf_idx
-	beq.s .Lruncmd
-	move.b cmdbuf_idx, %d1
-	cmpi.b #CMDBUF_SZ, %d1	| if overflow, return
+	cmpi.b #13, %d0		| if newline, goto runcmd
+	bne.s .Lappend
+	| zero-terminate, reset idx, and run
+	move.w cmdbuf_idx, %d0
+	tst.w %d0	| on empty buffer, return
 	bne.s 0f
 	rts
-0:	movea.l cmdbuf, %a0
-	move.b %d0, (%a0,%d1)	| append character
-	addi.b #1, %d1
-	move.b %d1, cmdbuf_idx
+0:	movea.l #cmdbuf, %a0
+	move.b #0, (%a0,%d0.w)
+	move.w #0, cmdbuf_idx
+	bra.s .Lruncmd
+.Lappend:
+	move.w cmdbuf_idx, %d1
+	cmpi.w #CMDBUF_SZ, %d1	| if overflow, return
+	bne.s 0f
 	rts
-
+0:	movea.l #cmdbuf, %a0
+	move.b %d0, (%a0,%d1.w)	| append character
+	addi.w #1, %d1
+	move.w %d1, cmdbuf_idx
+	rts
 .Lruncmd:
+	move.w #0, %d0
 	move.b cmdbuf, %d0
 	cmpi.b #LAST_BRA, %d0
 	bhi cmd_invalid
 	| calculate offset in the branch table
 	subi.b #FIRST_BRA, %d0
-	bcs cmd_invalid
-	lsl.b #1, %d0
+	blo cmd_invalid
+	lsl.w #2, %d0
 	jmp .Lbratab(%pc, %d0.w)
-	
+
 .Lbratab:
 	.equ FIRST_BRA, 'a'
 	.equ LAST_BRA, 'x'
-	bra cmd_addr	| 'a' - address
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_echo	| 'e' - echo
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_help	| 'h' - help
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_read	| 'r' - read
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_invalid
-	bra cmd_write	| 'w' - write
-	bra cmd_exec	| 'x' - execute
-	nop
+	bra.w cmd_addr	| 'a' - address
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_echo	| 'e' - echo
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_help	| 'h' - help
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_read	| 'r' - read
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_invalid
+	bra.w cmd_write	| 'w' - write
+	bra.w cmd_exec	| 'x' - execute
+	bra.w cmd_invalid
 
 cmd_addr: | set address command handler
-	movea.l cmdbuf, %a0
+	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'a')
-	jsr parse_word
-	cmp.l #0, %d0
+	jsr parse_addr
+	| DBG
+	move.l %d0, %d4
+	movea.l #str_dbg, %a0
+	jsr printstr
+	move.l %d4, %d0
+	swap %d0
+	jsr print_word
+	move.b #' ', IOADDR_UART
+	move.w %d4, %d0
+	jsr print_word
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
+	move.l %d4, %d0
+
+	tst.l %d0
 	bge.s 0f
-	movea.l str_invval, %a0
+	movea.l #str_invval, %a0
 	jsr printstr
 	rts
 0:	move.l %d0, cur_addr
 	rts
 
 cmd_echo: | set echo on/off command handler
-	movea.l cmdbuf, %a0
+	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'e')
 	move.w #0, %d0
 	cmpi.b #'0', (%a0)
@@ -100,7 +124,7 @@ cmd_echo: | set echo on/off command handler
 	rts
 
 cmd_read: | read word command handler
-	movea.l cmdbuf, %a0
+	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'r')
 	movea.l cur_addr, %a1
 	move.w (%a1)+, %d0
@@ -111,12 +135,12 @@ cmd_read: | read word command handler
 	rts
 
 cmd_write: | write word command handler
-	movea.l cmdbuf, %a0
+	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'w')
 	jsr parse_word
 	cmp.l #0, %d0
 	bge.s 0f
-	movea.l str_invval, %a0
+	movea.l #str_invval, %a0
 	jsr printstr
 	rts
 0:	movea.l cur_addr, %a1
@@ -137,7 +161,7 @@ cmd_help: | help command handler
 cmd_invalid:
 	movea.l #str_unkcmd, %a0
 	jsr printstr
-	move.b %d0, IOADDR_UART
+	move.b cmdbuf, IOADDR_UART
 	move.b #13, IOADDR_UART
 	move.b #10, IOADDR_UART
 	rts
@@ -151,43 +175,54 @@ intr_uart:
 	cmpi.w #0, echo
 	beq.s .Lskipecho
 	move.b %d0, IOADDR_UART | echo
+	cmpi.w #13, %d0
+	bne.s .Lskipecho
+	move.b #10, IOADDR_UART
 .Lskipecho:
-	lea inbuf, %a0
-	move.b inbuf_wr, %d1	| index -> d1
-	move.b %d0, (%a0,%d1)	| *(inbuf + index) = d0
+	movea.l #inbuf, %a0
+	move.w inbuf_wr, %d1	| index -> d1
+	move.b %d0, (%a0,%d1.w)	| *(inbuf + index) = d0
 	| advance write index
-	addi.b #1, %d1		
-	andi.b #INBUF_MASK, %d1
-	move.b %d1, inbuf_wr
+	addq.w #1, %d1		
+	andi.w #INBUF_MASK, %d1
+	move.w %d1, inbuf_wr
 	| if write index caught up to the read index, advance the read
 	| index (dropping the oldest byte from the fifo)
-	cmp.b inbuf_rd, %d1
+	cmp.w inbuf_rd, %d1
 	bne.s 0f
-	addi.b #1, inbuf_rd
+	addq.w #1, inbuf_rd
 0:	movem.l (%sp)+, %d0-%d2/%a0
 	rte
 
-	.data
+
+	.section .rodata,"a"
 greet:	.asciz "68k monitor by John Tsiombikas <nuclear@member.fsf.org>\r\n"
 str_unkcmd: .asciz "Unknown command: "
 str_help:
-	.asciz "Commands:\r\n"
-	.asciz "a<addr> - set address for read/write operations\r\n"
-	.asciz "r - read word and increment address\r\n"
-	.asciz "w<data> - write word and increment address\r\n"
-	.asciz "e<0|1> - echo on/off\r\n"
-	.asciz "h - print command help\r\n"
+	.ascii "Commands:\r\n"
+	.ascii "  a<addr> - set address for read/write operations\r\n"
+	.ascii "  r - read word and increment address\r\n"
+	.ascii "  w<data> - write word and increment address\r\n"
+	.ascii "  e<0|1> - echo on/off\r\n"
+	.ascii "  h - print command help\r\n"
+	.byte 0
 str_invval: .asciz "Invalid hex value\r\n"
+str_dbg: .asciz "DBG: "
+
+	.data
+	.align 2
+echo:	.word 1
 
 	.bss
 | input buffer
 inbuf:	.space 32
 	.equ INBUF_MASK, 0x1f
-inbuf_wr: .byte
-inbuf_rd: .byte
+	.align 2
+inbuf_wr: .word 0
+inbuf_rd: .word 0
 | command buffer used in proc_input
 	.equ CMDBUF_SZ, 64
 cmdbuf: .space CMDBUF_SZ
-cmdbuf_idx: .byte
-cur_addr: .long
-echo:	.word
+	.align 2
+cmdbuf_idx: .word 0
+cur_addr: .long 0

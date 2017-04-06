@@ -81,7 +81,7 @@ enable_intr:
 
 .global disable_intr
 disable_intr:
-	ori.w #0x0300, %sr
+	ori.w #0x0700, %sr
 	rts
 
 .global set_intr_level
@@ -99,17 +99,18 @@ intr_fatal:
 intr_slot1:
 intr_slot2:
 intr_timer:
-	move.l #fatal_msg, %a0
-0:	move.b (%a0)+, %d0
-	tst.b %d0
-	beq.s 0f
-	move.b %d0, IOADDR_UART
-	bra.s 0b
+	move.l #str_fatal1, %a0
+	jsr printstr
+	move.w 6(%sp), %d0
+	andi.w #0xfff, %d0
+	jsr print_word
+	move.l #str_fatal2, %a0
+	jsr printstr
 0:	stop #0x2700
 	| sanity check
-	move.l #dot, %a0
 	move.b (%a0), IOADDR_UART
 	bra.s 0b
 
-fatal_msg: .asciz "Unexpected interrupt, system halted!\r\n"
-dot: .ascii "."
+	.section .rodata,"a"
+str_fatal1: .asciz "Unexpected interrupt: "
+str_fatal2: .asciz ", system halted!\r\n"

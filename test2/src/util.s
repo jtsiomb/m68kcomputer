@@ -19,12 +19,13 @@ printchar:
 | print_word expects a word in d0
 	.global print_word
 print_word:
+	rol.w #4, %d0
 	bsr print_hex_digit
-	lsr.w #4, %d0
+	rol.w #4, %d0
 	bsr print_hex_digit
-	lsr.w #4, %d0
+	rol.w #4, %d0
 	bsr print_hex_digit
-	lsr.w #4, %d0
+	rol.w #4, %d0
 	bsr print_hex_digit
 	rts
 
@@ -45,43 +46,70 @@ print_hex_digit:
 	move.b %d1, IOADDR_UART
 	rts
 
+| parse_addr expects a pointer ot a 6-digit hex string in a0
+| returns the longword value in d0 or (longword)-1
+| (NOTE: -1 or ffffffff is not a valid 24bit address)
+	.global parse_addr
+parse_addr:
+	move.l %d4, -(%sp)
+
+	bsr parse_byte
+	tst.w %d0
+	blt.s .Laret
+	move.w %d0, %d4
+	swap %d4
+
+	bsr parse_word
+	tst.l %d0
+	blt.s .Laret
+
+	or.l %d4, %d0
+.Laret:	move.l (%sp)+, %d4
+	rts
 
 | parse_word expects a pointer to a hex string in a0
-| returns the hex word value in d0
+| returns the word value in d0 or (longword)-1
 	.global parse_word
 parse_word:
-	move.l %d4, -(%sp)
-	moveq.l #0, %d4
+	move.w %d4, -(%sp)
 
-	move.b (%a0)+, %d0
-	bsr parse_hex_digit
-	cmpi.w #0, %d0
-	blt.s .Lret
+	bsr parse_byte
+	tst.w %d0
+	blt.s .Lwret
 	move.b %d0, %d4
-	lsl.w #4, %d4
+	lsl.w #8, %d4
 
-	move.b (%a0)+, %d0
+	bsr parse_byte
+	tst.w %d0
+	blt.s .Lwret
+
+	or.w %d4, %d0
+.Lwret:	move.w (%sp)+, %d4
+	ext.l %d0
+	rts
+
+| parse_byte expects a pointer to a hex string in a0
+| returns the byte value in d0 or (word)-1
+	.global parse_byte
+parse_byte:
+	move.w %d4, -(%sp)
+
+	move.b (%a0)+, %d0	| read first char for the MSNibble
 	bsr parse_hex_digit
-	cmpi.w #0, %d0
-	blt.s .Lret
-	or.b %d0, %d4
-	lsl.w #4, %d4
+	tst.b %d0
+	blt.s .Lbret
+	move.b %d0, %d4
+	lsl.b #4, %d4
 
-	move.b (%a0)+, %d0
+	move.b (%a0)+, %d0	| read the next char for the LSNibble
 	bsr parse_hex_digit
-	cmpi.w #0, %d0
-	blt.s .Lret
-	or.b %d0, %d4
-	lsl.w #4, %d4
-
-	move.b (%a0)+, %d0
-	bsr parse_hex_digit
-	cmpi.l #0, %d0
-	blt.s .Lret
+	tst.b %d0
+	blt.s .Lbret
 	or.b %d0, %d4
 
-	move.l %d4, %d0
-.Lret:	move.l (%sp)+, %d4
+	move.b %d4, %d0
+.Lbret:	move.w (%sp)+, %d4
+	ext.w %d0
 	rts
 
 | parse_hex_digit expects an ascii char in d0
@@ -93,6 +121,7 @@ parse_hex_digit:
 	bhi.s .Lover9
 	| it's between 0 and 9
 	subi.b #'0', %d0
+	ext.w %d0
 	rts
 .Lover9:
 	cmpi.b #'a', %d0
@@ -101,6 +130,7 @@ parse_hex_digit:
 	bhi.s .Linvhex
 	| it's between a and f
 	subi.b #87, %d0
+	ext.w %d0
 	rts
 .Linvhex:
 	move.w #-1, %d0

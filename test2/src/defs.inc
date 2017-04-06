@@ -6,7 +6,7 @@
 	.equ IOADDR_DATA, 0x8005
 
 	.macro DISABLE_INTR
-	ori.w #0x0300, %sr
+	ori.w #0x0700, %sr
 	.endm
 
 	.macro ENABLE_INTR
