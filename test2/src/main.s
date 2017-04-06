@@ -92,18 +92,18 @@ cmd_addr: | set address command handler
 	addq.l #1, %a0	| skip the command char (should be 'a')
 	jsr parse_addr
 	| DBG
-	move.l %d0, %d4
-	movea.l #str_dbg, %a0
-	jsr printstr
-	move.l %d4, %d0
-	swap %d0
-	jsr print_word
-	move.b #' ', IOADDR_UART
-	move.w %d4, %d0
-	jsr print_word
-	move.b #13, IOADDR_UART
-	move.b #10, IOADDR_UART
-	move.l %d4, %d0
+	|move.l %d0, %d4
+	|movea.l #str_dbg, %a0
+	|jsr printstr
+	|move.l %d4, %d0
+	|swap %d0
+	|jsr print_word
+	|move.b #' ', IOADDR_UART
+	|move.w %d4, %d0
+	|jsr print_word
+	|move.b #13, IOADDR_UART
+	|move.b #10, IOADDR_UART
+	|move.l %d4, %d0
 
 	tst.l %d0
 	bge.s 0f
@@ -151,6 +151,13 @@ cmd_write: | write word command handler
 cmd_exec: | execute code from current address command handler
 	movea.l cur_addr, %a0
 	jsr (%a0)
+	move.l %d0, %d1
+	movea.l #str_execdone, %a0
+	jsr printstr
+	move.l %d1, %d0
+	jsr print_word
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
 	rts
 
 cmd_help: | help command handler
@@ -203,11 +210,13 @@ str_help:
 	.ascii "  a<addr> - set address for read/write operations\r\n"
 	.ascii "  r - read word and increment address\r\n"
 	.ascii "  w<data> - write word and increment address\r\n"
+	.ascii "  x - execute subroutine at current address\r\n"
 	.ascii "  e<0|1> - echo on/off\r\n"
 	.ascii "  h - print command help\r\n"
 	.byte 0
 str_invval: .asciz "Invalid hex value\r\n"
 str_dbg: .asciz "DBG: "
+str_execdone: .asciz "exec done, status: "
 
 	.data
 	.align 2
