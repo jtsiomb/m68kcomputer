@@ -16,7 +16,7 @@ Directory structure:
 
   * `hw` - hardware: kicad files and pdf schematics.
   * `fw_iolite` - firmware for the I/O controller.
-  * `test2` - 68000 code for the initial debugging/testing.
+  * `monitor` - ROM monitor program.
 
 License
 -------
