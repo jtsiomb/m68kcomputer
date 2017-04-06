@@ -17,7 +17,7 @@ static int uart_send_char(char c, FILE *fp);
 static int uart_get_char(FILE *fp);
 
 #define BUF_SZ	16
-#define BUF_IDX_MASK	0xf
+#define BUF_IDX_MASK	(BUF_SZ - 1)
 #define NEXT_IDX(x)	(((x) + 1) & BUF_IDX_MASK)
 static char outbuf[BUF_SZ];
 static volatile unsigned char out_rd, out_wr;
