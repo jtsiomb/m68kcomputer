@@ -23,6 +23,9 @@ CFLAGS = -m68010 -ffreestanding -fno-builtin $(warn) $(opt) $(inc) $(def)
 ASFLAGS = -m68010 $(inc)
 LDFLAGS = -T loadprog.ldscript -L/usr/lib/gcc-cross/m68k-linux-gnu/6 -lgcc
 
+.PHONY: all
+all: $(name).mon
+
 $(bin): $(elf)
 	$(OBJCOPY) -O binary $< $@
 

@@ -4,6 +4,10 @@
 void printstr(const char *str)
 {
 	while(*str) {
-		IOREG_UART = *str++;
+		char c = *str++;
+		if(c == '\n') {
+			IOREG_UART = '\r';
+		}
+		IOREG_UART = c;
 	}
 }
