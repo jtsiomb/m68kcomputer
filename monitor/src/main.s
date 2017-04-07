@@ -91,26 +91,22 @@ cmd_addr: | set address command handler
 	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'a')
 	jsr parse_addr
-	| DBG
-	|move.l %d0, %d4
-	|movea.l #str_dbg, %a0
-	|jsr printstr
-	|move.l %d4, %d0
-	|swap %d0
-	|jsr print_word
-	|move.b #' ', IOADDR_UART
-	|move.w %d4, %d0
-	|jsr print_word
-	|move.b #13, IOADDR_UART
-	|move.b #10, IOADDR_UART
-	|move.l %d4, %d0
-
 	tst.l %d0
 	bge.s 0f
 	movea.l #str_invval, %a0
 	jsr printstr
 	rts
-0:	move.l %d0, cur_addr
+	| print address
+0:	move.l %d0, %d4
+	move.b #'@', IOADDR_UART
+	swap %d0
+	jsr print_byte
+	swap %d0
+	jsr print_word
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
+
+	move.l %d4, cur_addr
 	rts
 
 cmd_echo: | set echo on/off command handler
@@ -124,28 +120,27 @@ cmd_echo: | set echo on/off command handler
 	rts
 
 cmd_read: | read word command handler
-	movea.l #cmdbuf, %a0
-	addq.l #1, %a0	| skip the command char (should be 'r')
 	movea.l cur_addr, %a1
+	move.l %a1, %a0
 	move.w (%a1)+, %d0
 	move.l %a1, cur_addr
-	jsr print_word
-	move.b #13, IOADDR_UART
-	move.b #10, IOADDR_UART
+	jsr print_addr_data
 	rts
 
 cmd_write: | write word command handler
 	movea.l #cmdbuf, %a0
 	addq.l #1, %a0	| skip the command char (should be 'w')
 	jsr parse_word
-	cmp.l #0, %d0
+	tst.l %d0
 	bge.s 0f
 	movea.l #str_invval, %a0
 	jsr printstr
 	rts
 0:	movea.l cur_addr, %a1
-	move.l %d0, (%a1)+
+	move.l %a1, %a0
+	move.w %d0, (%a1)+
 	move.l %a1, cur_addr
+	jsr print_addr_data
 	rts
 
 cmd_exec: | execute code from current address command handler
@@ -173,18 +168,42 @@ cmd_invalid:
 	move.b #10, IOADDR_UART
 	rts
 
+| expects address in a0, and data in d0
+print_addr_data:
+	move.w %d0, -(%sp)
+	move.l %a0, %d0
+	swap %d0
+	jsr print_byte
+	swap %d0
+	jsr print_word
+	move.b #':', IOADDR_UART
+	move.w (%sp)+, %d0
+	jsr print_word
+	move.b #13, IOADDR_UART
+	move.b #10, IOADDR_UART
+	rts
+
 | UART interrupt handler echoes the character and appends it to the
 | input buffer for further processing in the main loop
 	.global intr_uart
 intr_uart:
 	movem.l %d0-%d2/%a0, -(%sp)
 	move.b IOADDR_UART, %d0
-	cmpi.w #0, echo
+	| check to see if we need to drop a LF
+	tst.b droplf
+	beq.s .Lnodrop
+	clr.b droplf
+	cmp.b #10, %d0
+	beq.s .Lintr_uart_end
+.Lnodrop:
+	tst.w echo
 	beq.s .Lskipecho
 	move.b %d0, IOADDR_UART | echo
-	cmpi.w #13, %d0
+	| also echo a LF if we're echoing a CR
+	cmpi.b #13, %d0
 	bne.s .Lskipecho
 	move.b #10, IOADDR_UART
+	move.b #1, droplf
 .Lskipecho:
 	movea.l #inbuf, %a0
 	move.w inbuf_wr, %d1	| index -> d1
@@ -196,9 +215,10 @@ intr_uart:
 	| if write index caught up to the read index, advance the read
 	| index (dropping the oldest byte from the fifo)
 	cmp.w inbuf_rd, %d1
-	bne.s 0f
+	bne.s .Lintr_uart_end
 	addq.w #1, inbuf_rd
-0:	movem.l (%sp)+, %d0-%d2/%a0
+.Lintr_uart_end:
+	movem.l (%sp)+, %d0-%d2/%a0
 	rte
 
 
@@ -215,12 +235,12 @@ str_help:
 	.ascii "  h - print command help\r\n"
 	.byte 0
 str_invval: .asciz "Invalid hex value\r\n"
-str_dbg: .asciz "DBG: "
 str_execdone: .asciz "exec done, status: "
 
 	.data
 	.align 2
 echo:	.word 1
+droplf:	.byte 0
 
 	.bss
 | input buffer

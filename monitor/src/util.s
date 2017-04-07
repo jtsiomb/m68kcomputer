@@ -16,6 +16,14 @@ printchar:
 	move.b %d0, IOADDR_UART
 	rts
 
+	.global print_byte
+print_byte:
+	rol.b #4, %d0
+	bsr print_hex_digit
+	rol.b #4, %d0
+	bsr print_hex_digit
+	rts
+
 | print_word expects a word in d0
 	.global print_word
 print_word:
