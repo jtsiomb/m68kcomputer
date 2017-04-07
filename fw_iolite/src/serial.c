@@ -81,7 +81,8 @@ static int uart_get_char(FILE *fp)
 	return c;
 }
 
-extern void recv_data_intr(void);
+void recv_data_intr(void);
+void pulse_dtack(void);
 
 ISR(USART_RX_vect)
 {

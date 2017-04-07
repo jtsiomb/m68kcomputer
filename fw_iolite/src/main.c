@@ -80,7 +80,11 @@ void do_read(unsigned char addr)
 	switch(addr) {
 	case 0: /* UART */
 		data = getchar();
-		/*printf("DBG: read(%x)->'%c'\n", (unsigned int)addr, data);*/
+		/*printf("DBG: %d", data);
+		if(isprint(data)) {
+			printf(" (%c)", data);
+		}
+		printf("\r\n");*/
 		/* also acknowledge the interrupt if it's pending and
 		 * there are no more bytes to read
 		 */
