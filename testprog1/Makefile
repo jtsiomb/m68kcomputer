@@ -1,12 +1,12 @@
 ssrc = $(wildcard src/*.s)
-csrc = $(wildcard src/*.c)
+csrc = $(wildcard src/*.c) $(wildcard src/libc/*.c)
 obj = $(ssrc:.s=.o) $(csrc:.c=.o)
 
 name = testprog1
 elf = $(name).elf
 bin = $(name).bin
 
-tool_prefix = m68k-linux-gnu-
+tool_prefix = m68k-elf-
 
 CC = $(tool_prefix)gcc
 AS = $(tool_prefix)as
@@ -14,14 +14,14 @@ LD = $(tool_prefix)ld
 OBJCOPY = $(tool_prefix)objcopy
 OBJDUMP = $(tool_prefix)objdump
 
-warn = -pedantic -Wall
+warn = -pedantic -Wall -Wno-unused-but-set-variable
 opt = -Os
 def = -D__NO_CTYPE
-inc = -Isrc
+inc = -Isrc -Isrc/libc
 
-CFLAGS = -m68010 -ffreestanding -fno-builtin $(warn) $(opt) $(inc) $(def)
+CFLAGS = -m68010 -ffreestanding -fno-builtin -nostdinc $(warn) $(opt) $(inc) $(def)
 ASFLAGS = -m68010 $(inc)
-LDFLAGS = -T loadprog.ldscript -L/usr/lib/gcc-cross/m68k-linux-gnu/6 -lgcc
+LDFLAGS = -m68010 -ffreestanding -nostdlib -T loadprog.ldscript -lgcc
 
 .PHONY: all
 all: $(name).mon
@@ -30,7 +30,7 @@ $(bin): $(elf)
 	$(OBJCOPY) -O binary $< $@
 
 $(elf): $(obj)
-	$(LD) -o $@ $(obj) -Map link.map $(LDFLAGS)
+	$(CC) -o $@ $(obj) -Wl,-Map -Wl,link.map $(LDFLAGS)
 
 $(name).mon: $(bin)
 	bin2moncmd -o $@ $<
