@@ -17,6 +17,7 @@ int main(void)
 
 	regis_enter();
 	regis_clear();
+	regis_leave();
 
 	for(i=0; i<3; i++) {
 		int vidx0 = i * 2;
@@ -28,7 +29,6 @@ int main(void)
 		koch(x0, y0, x1, y1, KOCH_ITER);
 	}
 
-	regis_leave();
 	return 0;
 }
 
@@ -39,10 +39,12 @@ void koch(int x0, int y0, int x1, int y1, int iter)
 	int x = x0, y = y0, nx, ny;
 
 	if(!iter) {
+		regis_enter();
 		regis_abspos(x0, y0);
 		regis_begin_vector(REGIS_UNBOUNDED);
 		regis_absv(x1, y1);
 		regis_end_vector();
+		regis_leave();
 		return;
 	}
 

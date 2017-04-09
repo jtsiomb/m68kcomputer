@@ -2,7 +2,7 @@ ssrc = $(wildcard src/*.s)
 csrc = $(wildcard src/*.c) $(wildcard src/libc/*.c)
 obj = $(ssrc:.s=.o) $(csrc:.c=.o)
 
-name = testprog1
+name = koch
 elf = $(name).elf
 bin = $(name).bin
 
