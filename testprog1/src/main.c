@@ -2,13 +2,33 @@
 #include "util.h"
 #include "regis.h"
 
+#define KOCH_ITER	4
+
 void koch(int x0, int y0, int x1, int y1, int iter);
+
+static int verts[][2] = {
+	{70, 140}, {420, 140},
+	{420, 140}, {240, 440},
+	{240, 440}, {70, 140}
+};
 
 int main(void)
 {
+	int i;
+
 	regis_enter();
 	regis_clear();
-	koch(10, 300, 400, 300, 4);
+
+	for(i=0; i<3; i++) {
+		int vidx0 = i * 2;
+		int vidx1 = i * 2 + 1;
+		int x0 = verts[vidx0][0];
+		int y0 = verts[vidx0][1];
+		int x1 = verts[vidx1][0];
+		int y1 = verts[vidx1][1];
+		koch(x0, y0, x1, y1, KOCH_ITER);
+	}
+
 	regis_leave();
 	return 0;
 }
