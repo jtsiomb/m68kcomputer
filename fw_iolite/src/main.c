@@ -67,7 +67,7 @@ void init(void)
 	PORTC = 0;
 
 	/* initialize the UART and enable interrupts */
-	init_serial(38400);
+	init_serial(115200);
 	sei();
 
 	rtc_init();
