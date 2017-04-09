@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "util.h"
 #include "regis.h"
 
 #define KOCH_ITER	4
