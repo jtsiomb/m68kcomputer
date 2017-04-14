@@ -21,13 +21,14 @@ enum {
 #define disable_intr()	set_intr_level(7)
 
 void init_intr(void);
+void cleanup_intr(void);
 /* defined in intr-asm.s */
 void set_intr_vector_base(void *vptr);
 void *get_intr_vector_base(void);
-int set_intr_level(short lvl);
+int set_intr_level(int lvl);
 int get_intr_level(void);
-void set_intr_vector(short inum, uint32_t addr);
+void set_intr_vector(int inum, void (*addr)());
 
-uintptr_t intr_uart;
+void intr_uart();
 
 #endif	/* INTR_H_ */

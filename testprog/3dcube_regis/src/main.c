@@ -38,7 +38,7 @@ static void draw(void)
 	x3d_load_identity();
 	x3d_translate(0, 0, 8 << 16);
 	x3d_rotate(25 << 16, 65536, 0, 0);
-	x3d_rotate(tm << 13, 0, 65536, 0);
+	x3d_rotate(tm << 14, 0, 65536, 0);
 
 	x3d_color_index(3);
 

@@ -14,7 +14,7 @@ get_intr_vector_base:
 
 	.global set_intr_level
 set_intr_level:
-	move.w 4(%sp), %d0
+	move.l 4(%sp), %d0
 	lsl.w #8, %d0
 	move.w %sr, %d1
 	andi.w #0xf8ff, %d1
@@ -34,20 +34,18 @@ get_intr_level:
 
 	.global set_intr_vector
 set_intr_vector:
-	move.w 4(%sp), %d0
+	move.l 4(%sp), %d0
 	lsl.w #2, %d0
-	movea.l 6(%sp), %a0
+	movea.l 8(%sp), %a0
 	movec %vbr, %a1
 	move.l %a0, (%a1,%d0.w)
 	rts
 
-	.equ IOADDR_UART, 0x8001
-| serial interrupt handler
+| the serial interrupt just saves state and calls uart_handler in uart.c
+	.extern uart_handler
 	.global intr_uart
 intr_uart:
-	move.w %d0, -(%sp)
-	move.b IOADDR_UART, %d0
-	subi.b #32, %d0
-	move.b %d0, IOADDR_UART
-	move.w (%sp)+, %d0
+	movem.l %d0-%d1/%a0-%a1, -(%sp)
+	jsr uart_handler
+	movem.l (%sp)+, %d0-%d1/%a0-%a1
 	rte
