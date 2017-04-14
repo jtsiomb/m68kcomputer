@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "intr.h"
 
 static void proc_input(char c);
@@ -27,6 +28,12 @@ int main(void)
 
 static void proc_input(char c)
 {
+	if(isprint(c)) {
+		printf("got char: '%c'\n", c);
+	} else {
+		printf("got char: %d\n", (int)c);
+	}
+
 	switch(c) {
 	case '\b':
 	case 127:
