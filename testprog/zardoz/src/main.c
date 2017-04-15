@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "intr.h"
+#include "tctl.h"
 
 static void proc_input(char c);
 /*static int tokenize_input(void);
@@ -74,15 +75,15 @@ static void proc_input(char c)
 				--cursor;
 				--inp_sz;
 				if(c != '\b') {
-					putchar(8);		/* echo ^H */
+					putchar('\b');		/* echo ^H */
 				}
+				printf(" \b");
 			}
 			break;
 
 		case 21:	/* ctrl-U */
 			if(cursor > 0) {
-				printf("\033[1K");
-				printf("\033[0G");
+				printf(TCTL_KILL_HOME);
 				inp_sz -= cursor;
 				memmove(input, input + cursor, inp_sz);
 				cursor = 0;
@@ -91,7 +92,7 @@ static void proc_input(char c)
 
 		case 11:	/* ctrl-k */
 			if(cursor < inp_sz) {
-				printf("\033[K");
+				printf(TCTL_KILL_END);
 				inp_sz -= inp_sz - cursor;
 				cursor = inp_sz;
 			}
@@ -122,10 +123,17 @@ static void proc_input(char c)
 
 		default:
 			if(cursor < inp_sz) {
-				memmove(input + cursor + 1, input + cursor, inp_sz - cursor);
+				char *tptr = input + cursor + 1;
+				memmove(tptr, input + cursor, inp_sz - cursor);
+				input[cursor++] = c;
+				input[++inp_sz] = 0;
+				printf(TCTL_CUR_SAVE);
+				printf("\033[K%s", tptr);
+				printf(TCTL_CUR_UNSAVE);
+			} else {
+				input[cursor++] = c;
+				++inp_sz;
 			}
-			input[cursor++] = c;
-			++inp_sz;
 		}
 	}
 
