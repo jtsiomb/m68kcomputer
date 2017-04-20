@@ -128,7 +128,7 @@ static void proc_input(char c)
 				input[cursor++] = c;
 				input[++inp_sz] = 0;
 				printf(TCTL_CUR_SAVE);
-				printf("\033[K%s", tptr);
+				printf(TCTL_KILL_END "%s", tptr);
 				printf(TCTL_CUR_UNSAVE);
 			} else {
 				input[cursor++] = c;
