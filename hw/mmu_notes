@@ -1,0 +1,25 @@
+1st pass at a simple MMU
+------------------------
+
+Add a base address register for user processes, ignored when FC signals a
+supervisor bus cycle. Add the base register contents to the address on the bus
+for each user access. Maybe also add a limit register for raising bus errors
+when the process oversteps its bounds. I don't want to artificially pre-segment
+all accesses in fixed sized chunks, so it probably can't be a simple "replace
+the top N bits with the contents of a small register" deal. I think it has to be
+a 23-bit adder circuit to produce the physical address.
+
+Kernel code can manually add the contents of the base register to access user
+buffers passed in system calls.
+
+User space segments will start somewhere in RAM, which is above the I/O space,
+so the segmentation registers themselves will be protected automatically.
+
+More complicated alternative
+----------------------------
+
+Is a proper paging system out of the grasp of a reasonably small discrete
+component design? 16MB is not that large of an address space; it can probably be
+managed with a single-level page table in MMU-local static memory, to avoid the
+complication of having the MMU take control of the bus for accessing page tables
+etc. I think it's still too much...
