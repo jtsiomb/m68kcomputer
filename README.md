@@ -18,6 +18,8 @@ Directory structure:
   * `fw_iolite` - firmware for the I/O controller.
   * `monitor` - ROM monitor program.
 
+Project website: http://nuclear.mutantstargoat.com/hw/m68kcomp1
+
 License
 -------
 Copyright (C) 2017 John Tsiombikas <nuclear@member.fsf.org>
