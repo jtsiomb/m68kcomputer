@@ -11,17 +11,12 @@
 #include "serial.h"
 #include "ds1302rtc.h"
 
-enum {
-	REG_UART_BUFFER,
-	REG_CTL_CMD,
-	REG_CTL_DATA
-};
-
 void init(void);
 void do_read(unsigned char addr);
 void do_write(unsigned char addr);
 void pulse_dtack(void);
 unsigned char rdata(void);
+void wdata(unsigned char data);
 const char *day_of_week(int x);
 
 unsigned char last_cmd;
@@ -78,7 +73,7 @@ void do_read(unsigned char addr)
 	unsigned char data;
 
 	switch(addr) {
-	case 0: /* UART */
+	case REG_UART_BUFFER:
 		data = getchar();
 		/*printf("DBG: %d", data);
 		if(isprint(data)) {
@@ -95,7 +90,7 @@ void do_read(unsigned char addr)
 		sei();
 		break;
 
-	case 2:
+	case REG_CTL_DATA:
 		data = rdata();
 		break;
 
@@ -125,13 +120,13 @@ void do_write(unsigned char addr)
 	unsigned char data = (PINC & PC_DATA_MASK) | (PIND & PD_DATA_MASK);
 
 	switch(addr) {
-	case 0:	/* UART */
+	case REG_UART_BUFFER:
 		putchar(data);
 		fflush(stdout);
 		/*printf("DBG: write(%x)->'%c' (%x)\n", (unsigned int)addr, data, (unsigned int)data);*/
 		break;
 
-	case 1: /* cmd */
+	case REG_CTL_CMD:
 		last_cmd = data;
 		switch(data) {
 		case CMD_TIME:
@@ -147,10 +142,11 @@ void do_write(unsigned char addr)
 		}
 		break;
 
-	case 2: /* data */
+	case REG_CTL_DATA:
+		wdata(data);
 		break;
 
-	case 3:	/* interrupt acknowledge */
+	case REG_INT_ACK:	/* interrupt acknowledge */
 		switch(data) {
 		case 2:
 			PORTB |= PB_IRQ_UART_BIT;
@@ -190,6 +186,34 @@ unsigned char rdata(void)
 		break;
 	}
 	return 0xff;
+}
+
+/* processor is writing to the data register */
+void wdata(unsigned char data)
+{
+	switch(last_cmd) {
+	case CMD_TIME:
+		((int*)&tm)[rtc_seq_idx] = data;
+		if(++rtc_seq_idx >= 3) {
+			rtc_set_time(tm.hour, tm.min, tm.sec);
+			last_cmd = CMD_INVALID;
+		}
+		break;
+
+	case CMD_DATE:
+		((int*)&date)[rtc_seq_idx] = data;
+		if(++rtc_seq_idx == 3) {
+			rtc_set_date(date.year, date.month, date.day);
+		} else if(rtc_seq_idx >= 4) {
+			rtc_set_weekday(date.dow);
+			last_cmd = CMD_INVALID;
+		}
+		break;
+
+	case CMD_INVALID:
+	default:
+		break;
+	}
 }
 
 /* this is called by the UART interrupt to signal that we got some data

@@ -30,12 +30,20 @@
 #define PD_DTACK_BIT		0x10
 #define PD_RTC_CE_BIT		0x20
 
+/* I/O registers */
+enum {
+	REG_UART_BUFFER	= 0,
+	REG_CTL_CMD		= 1,
+	REG_CTL_DATA	= 2,
+	REG_INT_ACK		= 3
+};
+
 /* processor interface commands */
 enum {
-	CMD_INVALID,
-	CMD_TIME,
-	CMD_DATE,
-	CMD_TIMER
+	CMD_INVALID = 0,
+	CMD_TIME	= 1,
+	CMD_DATE	= 2,
+	CMD_TIMER	= 3
 };
 
 
