@@ -1,0 +1,21 @@
+OUTPUT_ARCH(m68k)
+
+SECTIONS {
+	. = 0x40100;	/* leave 256 bytes for monitor data in RAM */
+	.text.startup : { * (.text.startup); }
+	. = ALIGN(4);
+	.text : { * (.text); }
+	. = ALIGN(4);
+	.rodata : { * (.rodata); }
+	. = ALIGN(4);
+	.data : { * (.data); }
+
+	/* place the .bss section at the end */
+	.bss ALIGN(4): {
+		_bss_start = .;
+		* (.bss);
+		. = ALIGN(4);
+		_bss_end = .;
+	}
+	_bss_size = SIZEOF(.bss);
+}
