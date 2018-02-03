@@ -33,9 +33,11 @@ int main(void)
 	rtc_get_time(&tm);
 	rtc_get_date(&date);
 
+	/*
 	printf("\r\nI/O board lite debug\r\n");
 	printf("%s %02d/%02d/%d - %02d:%02d.%02ds\r\n", day_of_week(date.dow), date.day,
 			date.month, date.year, tm.hour, tm.min, tm.sec);
+	*/
 
 	for(;;) {
 		if((PIND & PD_ENABLE_BIT) == 0) {
@@ -179,7 +181,12 @@ unsigned char rdata(void)
 		return ((int*)&tm)[rtc_seq_idx++];
 
 	case CMD_DATE:
-		return ((int*)&date)[rtc_seq_idx++];
+		if(rtc_seq_idx == 0) {
+			++rtc_seq_idx;
+			return date.year - 2000;
+		} else {
+			return ((int*)&date)[rtc_seq_idx++];
+		}
 
 	case CMD_INVALID:
 	default:
@@ -203,6 +210,7 @@ void wdata(unsigned char data)
 	case CMD_DATE:
 		((int*)&date)[rtc_seq_idx] = data;
 		if(++rtc_seq_idx == 3) {
+			date.year = 2000 + date.year;
 			rtc_set_date(date.year, date.month, date.day);
 		} else if(rtc_seq_idx >= 4) {
 			rtc_set_weekday(date.dow);
